@@ -52,15 +52,18 @@ def apiViewByFilter():
     employer_name = query_parameters.get('employer_name')
     job_title = query_parameters.get('job_title')
 
+
     query = "SELECT * FROM H1B_DATA WHERE"
     to_filter = []
 
     if employer_name:
-        query += ' employer_name=? AND'
+        employer_name = employer_name.lower()
+        query += ' lower(employer_name)=? AND'
         to_filter.append(employer_name)
 
     if job_title:
-        query += ' job_title=? AND'
+        job_title = job_title.lower()
+        query += ' lower(job_title)=? AND'
         to_filter.append(job_title)
 
 

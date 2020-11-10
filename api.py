@@ -51,31 +51,56 @@ def apiViewByFilter():
 
     employer_name = query_parameters.get('employer_name')
     job_title = query_parameters.get('job_title')
+    soc_code = query_parameters.get('soc_code')
+    worksite_city = query_parameters.get('worksite_city')
 
 
     query = "SELECT * FROM H1B_DATA WHERE"
+    qry_dtl = """select EMPLOYER_NAME
+,WORKSITE_CITY
+,WORKSITE_STATE
+,WORKSITE_POSTAL_CODE
+,WAGE_RATE_OF_PAY_FROM
+,WAGE_RATE_OF_PAY_TO
+,SOC_CODE
+,SOC_NAME
+,JOB_TITLE from h1b_data where CASE_STATUS = 'CERTIFIED' 
+AND PW_UNIT_OF_PAY = 'Year' and WAGE_UNIT_OF_PAY = 'Year' and FULL_TIME_POSITION='Y' and
+ """
+
     to_filter = []
 
     if employer_name:
         employer_name = employer_name.lower()
-        query += ' lower(employer_name)=? AND'
+        qry_dtl += ' lower(employer_name)=? AND'
         to_filter.append(employer_name)
 
     if job_title:
         job_title = job_title.lower()
-        query += ' lower(job_title)=? AND'
+        qry_dtl += ' lower(job_title)=? AND'
         to_filter.append(job_title)
 
+    if soc_code:
+        soc_code = soc_code.lower()
+        qry_dtl += ' lower(soc_code)=? AND'
+        to_filter.append(soc_code)
+    
+    if worksite_city:
+        worksite_city = worksite_city.lower()
+        qry_dtl += ' lower(worksite_city)=? AND'
+        to_filter.append(worksite_city)
 
-    if not (employer_name or job_title):
+
+    if not (employer_name and (job_title or soc_code)):
         return pageNotFound(404)
 
     query = query[:-4] + ';'
+    qry_dtl = qry_dtl[:-4] + 'order by WAGE_RATE_OF_PAY_FROM desc;'
 
     conn = sqlite3.connect('h1b.db')
     conn.row_factory = dictFactory
     cur = conn.cursor()
-    results = cur.execute(query, to_filter).fetchall()
+    results = cur.execute(qry_dtl, to_filter).fetchall()
 
     return jsonify(results)
 

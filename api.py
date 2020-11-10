@@ -72,12 +72,14 @@ AND PW_UNIT_OF_PAY = 'Year' and WAGE_UNIT_OF_PAY = 'Year' and FULL_TIME_POSITION
 
     if employer_name:
         employer_name = employer_name.lower()
-        qry_dtl += ' lower(employer_name)=? AND'
+        employer_name = '%' + employer_name + '%'
+        qry_dtl += ' lower(employer_name) like ? AND'
         to_filter.append(employer_name)
 
     if job_title:
         job_title = job_title.lower()
-        qry_dtl += ' lower(job_title)=? AND'
+        job_title = '%' + job_title + '%'
+        qry_dtl += ' lower(job_title) like ? AND'
         to_filter.append(job_title)
 
     if soc_code:

@@ -21,13 +21,31 @@ def dictFactory(cursor, row):
 
 @app.route('/', methods=['GET'])
 def homePage():
-    return '''
+    return """
     <h1>H1b Jobs Database</h1>
     <h3>You have reached: /home/</h3>
-    <p>To view sample 10 entries in the database: '127.0.0.1:5000/api/v1/h1b/sample' </p>
-    <p>To filter entries based on employer : '127.0.0.1:5000/api/v1/h1b?employer_name=LOGIXHUB+LLC' </p>
-    <p>To filter entries based on post job title : '127.0.0.1:5000/api/v1/h1b?job_title=SOFTWARE+ENGINEER' </p>
-'''
+    <br>
+    <h2>Querying the API from the browser</h2>
+
+    <p> <b> To view sample 2 entries in the database: </b> 
+    '127.0.0.1:5000/api/v1/h1b/sample' </p>
+
+    <p> <b> To filter entries based on employer, job title/soc code and location : </b>
+    '127.0.0.1:5000/api/v1/h1b?employer_name=LOGIXHUB+LLC&job_title=SOFTWARE+ENGINEER' </p>
+
+    <br>
+
+    <h2>Querying the API programatically</h2>
+
+    <p> Example below uses python requests library </p>
+
+    <code> import request <br>
+     resp = requests.get('http://127.0.0.1:5000/api/v1/h1b',params={'employer_name':'mufg','job_title':'software engineer','worksite_city':'monterey park'})
+     </code>
+
+
+    """
+    
 
 @app.route('/api/v1/h1b/sample', methods=['GET'])
 def api_view_sample():
@@ -60,8 +78,8 @@ def apiViewByFilter():
 ,WORKSITE_CITY
 ,WORKSITE_STATE
 ,WORKSITE_POSTAL_CODE
-,WAGE_RATE_OF_PAY_FROM
-,WAGE_RATE_OF_PAY_TO
+,max(WAGE_RATE_OF_PAY_FROM,WAGE_RATE_OF_PAY_TO) as salary
+,WAGE_RATE_OF_PAY_FROM,WAGE_RATE_OF_PAY_TO
 ,SOC_CODE
 ,SOC_NAME
 ,JOB_TITLE from h1b_data where CASE_STATUS = 'CERTIFIED' 
@@ -93,7 +111,7 @@ AND PW_UNIT_OF_PAY = 'Year' and WAGE_UNIT_OF_PAY = 'Year' and FULL_TIME_POSITION
         to_filter.append(worksite_city)
 
 
-    if not (employer_name and (job_title or soc_code)):
+    if not (employer_name or (job_title or soc_code) or worksite_city):
         return pageNotFound(404)
 
     query = query[:-4] + ';'
@@ -105,5 +123,5 @@ AND PW_UNIT_OF_PAY = 'Year' and WAGE_UNIT_OF_PAY = 'Year' and FULL_TIME_POSITION
     results = cur.execute(qry_dtl, to_filter).fetchall()
 
     return jsonify(results)
-
+    
 app.run()

@@ -13,12 +13,12 @@ The data for this project was sourced from H-1B FY2018.xlsx and loaded into a sq
 
 The code in api.py is repsonsible for creating the flask api that enables the client to send requests. You can demo this site at http://purplecouch.pythonanywhere.com.
 
-At the moment the data returned is in json format.
+At the moment the data returned is in json format.  
 
-Query example:
+**Query example:**
 ![example query](search_example.png)  
 
-Response example:
+**Response example:**
 ![example response](response_example.png)
 
 

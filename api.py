@@ -23,17 +23,27 @@ def dictFactory(cursor, row):
 def homePage():
     return """
     <h1>H1b Jobs Database</h1>
-    <h3>You have reached: /home/</h3>
+    <h3>You have reached the h1b jobs database where you can query specific companies to see what salary they hired h1b workers for.</h3>
+    <p> h1b salaries serve as a rough proxy of what type of jobs to expect for the same compensation. This is because the rules for posting
+    h1b jobs state that the wage paid to h1b workers is required to be no lower than the prevailing wage for a given job.<p>
+    
+    <p> You can check to see what a given job paid by entering the information below.<br> If you know the jobs soc code enter that instead of that
+    instead of the job title as it is more accurate.<br> 
+    You can find list of soc codes here <a href="https://www.bls.gov/soc/2010/2010_major_groups.htm">soc codes</a> <br>
+    For example the soc hob title "software developers, applications" has a code of 15-1132.<br>
+    If you don't know the exact code for a job then you can write a generic title in the job title like "software engineer" or even just "software" to return
+    all matches with software in the title.</p>
+
+    <h2>Enter search information below</h2>
+    <form action="/api/v1/h1b">
+             Enter Employer Name <input type='text' name='employer_name'><br>
+             Enter Job Title <input type='text' name='job_title'><br>
+             Enter soc code <input type='text' name='soc_code'><br>
+             Enter workiste city <input type='text' name='worksite_city'><br>
+             <input type='submit' value='search'>
+         </form>
     <br>
-    <h2>Querying the API from the browser</h2>
-
-    <p> <b> To view sample 2 entries in the database: </b> 
-    '127.0.0.1:5000/api/v1/h1b/sample' </p>
-
-    <p> <b> To filter entries based on employer, job title/soc code and location : </b>
-    '127.0.0.1:5000/api/v1/h1b?employer_name=LOGIXHUB+LLC&job_title=SOFTWARE+ENGINEER' </p>
-
-    <br>
+   
 
     <h2>Querying the API programatically</h2>
 
@@ -65,12 +75,16 @@ def apiViewByFilter():
     '''
     Function that allows users to filter the results in the API based on specified input.
     '''
-    query_parameters = request.args
+    #query_parameters = request.args
 
-    employer_name = query_parameters.get('employer_name')
-    job_title = query_parameters.get('job_title')
-    soc_code = query_parameters.get('soc_code')
-    worksite_city = query_parameters.get('worksite_city')
+    #employer_name = query_parameters.get('employer_name')
+    #job_title = query_parameters.get('job_title')
+    #soc_code = query_parameters.get('soc_code')
+    #worksite_city = query_parameters.get('worksite_city')
+    employer_name = request.args.get('employer_name')
+    job_title = request.args.get('job_title')
+    soc_code = request.args.get('soc_code')
+    worksite_city = request.args.get('worksite_city')
 
 
     query = "SELECT * FROM H1B_DATA WHERE"

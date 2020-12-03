@@ -2,6 +2,7 @@ import flask
 from flask import request, jsonify
 import sqlite3
 import numpy as np 
+from json2html import *
 
 # Debug allows for changes to be seen in real time.
 app = flask.Flask(__name__)
@@ -35,7 +36,7 @@ def homePage():
     all matches with software in the title.</p>
 
     <h2>Enter search information below</h2>
-    <form action="/api/v1/h1b">
+    <form action="/h1bjobs">
              Enter Employer Name <input type='text' name='employer_name'><br>
              Enter Job Title <input type='text' name='job_title'><br>
              Enter soc code <input type='text' name='soc_code'><br>
@@ -69,6 +70,81 @@ def api_view_sample():
 @app.errorhandler(404)
 def pageNotFound(e):
     return "<h1>Error 404</h1><p>Page not found.</p>", 404
+
+@app.route('/h1bjobs', methods=['GET'])
+def pageByFilter():
+    '''
+    Function that allows users to filter the results via an html form and returns output as an html table
+    '''
+    #query_parameters = request.args
+
+    #employer_name = query_parameters.get('employer_name')
+    #job_title = query_parameters.get('job_title')
+    #soc_code = query_parameters.get('soc_code')
+    #worksite_city = query_parameters.get('worksite_city')
+    employer_name = request.args.get('employer_name')
+    job_title = request.args.get('job_title')
+    soc_code = request.args.get('soc_code')
+    worksite_city = request.args.get('worksite_city')
+
+
+    query = "SELECT * FROM H1B_DATA WHERE"
+    qry_dtl = """select EMPLOYER_NAME
+,WORKSITE_CITY
+,WORKSITE_STATE
+,WORKSITE_POSTAL_CODE
+,max(WAGE_RATE_OF_PAY_FROM,WAGE_RATE_OF_PAY_TO) as salary
+,WAGE_RATE_OF_PAY_FROM,WAGE_RATE_OF_PAY_TO
+,SOC_CODE
+,SOC_NAME
+,JOB_TITLE from h1b_data where CASE_STATUS = 'CERTIFIED' 
+AND PW_UNIT_OF_PAY = 'Year' and WAGE_UNIT_OF_PAY = 'Year' and FULL_TIME_POSITION='Y' and
+ """
+
+    to_filter = []
+
+    if employer_name:
+        employer_name = employer_name.lower()
+        employer_name = '%' + employer_name + '%'
+        qry_dtl += ' lower(employer_name) like ? AND'
+        to_filter.append(employer_name)
+
+    if job_title:
+        job_title = job_title.lower()
+        job_title = '%' + job_title + '%'
+        qry_dtl += ' lower(job_title) like ? AND'
+        to_filter.append(job_title)
+
+    if soc_code:
+        soc_code = soc_code.lower()
+        qry_dtl += ' lower(soc_code)=? AND'
+        to_filter.append(soc_code)
+    
+    if worksite_city:
+        worksite_city = worksite_city.lower()
+        qry_dtl += ' lower(worksite_city)=? AND'
+        to_filter.append(worksite_city)
+
+
+    if not (employer_name or (job_title or soc_code) or worksite_city):
+        return pageNotFound(404)
+
+    query = query[:-4] + ';'
+    qry_dtl = qry_dtl[:-4] + 'order by WAGE_RATE_OF_PAY_FROM desc;'
+
+    conn = sqlite3.connect('h1b.db')
+    conn.row_factory = dictFactory
+    cur = conn.cursor()
+    results = cur.execute(qry_dtl, to_filter).fetchall()
+
+    #return jsonify(results)
+    #results_json = jsonify(results)
+    #results_html = json2html.convert(json=results_json)
+    results_html = json2html.convert(json=results)
+    #for j in results:
+        #results_html=json2html.convert(json=j)
+        #return results_html
+    return results_html
 
 @app.route('/api/v1/h1b', methods=['GET'])
 def apiViewByFilter():
@@ -136,6 +212,9 @@ AND PW_UNIT_OF_PAY = 'Year' and WAGE_UNIT_OF_PAY = 'Year' and FULL_TIME_POSITION
     cur = conn.cursor()
     results = cur.execute(qry_dtl, to_filter).fetchall()
 
-    return jsonify(results)
     
+    results_json = jsonify(results)
+    return results_json
+
+
 app.run()

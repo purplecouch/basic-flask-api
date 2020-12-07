@@ -36,11 +36,14 @@ def homePage():
     all matches with software in the title.</p>
 
     <h2>Enter search information below</h2>
+    <i>Note: Must enter state and county together</i>
     <form action="/h1bjobs">
-             Enter Employer Name <input type='text' name='employer_name'><br>
-             Enter Job Title <input type='text' name='job_title'><br>
-             Enter soc code <input type='text' name='soc_code'><br>
-             Enter workiste city <input type='text' name='worksite_city'><br>
+             Enter Employer Name                                     <input type='text' name='employer_name'><br>
+             Enter Job Title                                         <input type='text' name='job_title'><br>
+             Enter soc code                                          <input type='text' name='soc_code'><br>
+             Enter workiste city (example: Irvine)                   <input type='text' name='worksite_city'><br>
+             Enter workiste county (example: Orange County)          <input type='text' name='worksite_county'><br>
+             Enter workiste state code (Example: CA, NY, TX)         <input type='text' name='worksite_state'><br>
              <input type='submit' value='search'>
          </form>
     <br>
@@ -86,12 +89,15 @@ def pageByFilter():
     job_title = request.args.get('job_title')
     soc_code = request.args.get('soc_code')
     worksite_city = request.args.get('worksite_city')
+    worksite_state = request.args.get('worksite_state')
+    worksite_county = request.args.get('worksite_county')
 
 
     query = "SELECT * FROM H1B_DATA WHERE"
-    qry_dtl = """select EMPLOYER_NAME
+    qry_dtl = """select row_number() over(order by WAGE_RATE_OF_PAY_FROM desc) rownum, EMPLOYER_NAME
 ,WORKSITE_CITY
 ,WORKSITE_STATE
+,WORKSITE_COUNTY
 ,WORKSITE_POSTAL_CODE
 ,max(WAGE_RATE_OF_PAY_FROM,WAGE_RATE_OF_PAY_TO) as salary
 ,WAGE_RATE_OF_PAY_FROM,WAGE_RATE_OF_PAY_TO
@@ -124,9 +130,20 @@ AND PW_UNIT_OF_PAY = 'Year' and WAGE_UNIT_OF_PAY = 'Year' and FULL_TIME_POSITION
         worksite_city = worksite_city.lower()
         qry_dtl += ' lower(worksite_city)=? AND'
         to_filter.append(worksite_city)
+    
+    if worksite_state:
+        worksite_state = worksite_state.lower()
+        qry_dtl += ' lower(worksite_state)=? AND'
+        to_filter.append(worksite_state)
+
+    if worksite_county:
+        worksite_county = worksite_county.lower()
+        worksite_county = '%' + worksite_county + '%'
+        qry_dtl += ' lower(worksite_county) like ? AND'
+        to_filter.append(worksite_county)
 
 
-    if not (employer_name or (job_title or soc_code) or worksite_city):
+    if not (employer_name or (job_title or soc_code) or worksite_city or (worksite_state and worksite_county)):
         return pageNotFound(404)
 
     query = query[:-4] + ';'
